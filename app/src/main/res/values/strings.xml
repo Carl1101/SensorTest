@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SensorTest</string>
+    <string name="X">X:</string>
+    <string name="Y">Y:</string>
+    <string name="Z">Z:</string>
+    <string name="acc">Accelerometer:</string>
+    <string name="rot">Rotation V:</string>
+    <string name="gyr">Gyroscope:</string>
+    <string name="mag">Magnetic F:</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="save">Save Data</string>
+    <string name="action_settings">Settings</string>
+</resources>
