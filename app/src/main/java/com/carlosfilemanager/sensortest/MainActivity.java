@@ -116,13 +116,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
         Date now = cal.getTime();
 
-        writeToFile("Accelerometer_" + sdf.format(now) + ".csv", accList);
-        writeToFile("Gyroscope_" + sdf.format(now) + ".csv", gyroList);
-        writeToFile("RotationVector_" + sdf.format(now) + ".csv", rotList);
-        writeToFile("MagneticField_" + sdf.format(now) + ".csv", magList);
+        writeToFile("Accelerometer_" + sdf.format(now) + ".csv", sdf.format(now),accList);
+        writeToFile("Gyroscope_" + sdf.format(now) + ".csv", sdf.format(now), gyroList);
+        writeToFile("RotationVector_" + sdf.format(now) + ".csv", sdf.format(now), rotList);
+        writeToFile("MagneticField_" + sdf.format(now) + ".csv", sdf.format(now), magList);
+
+        accList.clear();
+        gyroList.clear();
+        rotList.clear();
+        magList.clear();
     }
 
-    public  void writeToFile(String fileName, ArrayList<Trio> samples) {
+    public  void writeToFile(String fileName,String time, ArrayList<Trio> samples) {
         final String FOLDER_NAME = "Sensor_Data";
 
         try {
@@ -130,9 +135,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (!f.exists())
                 f.mkdirs();
 
-            File data = new File(f, fileName);
+            File dataFolder = new File(f, time);
+            if (!dataFolder.exists())
+                dataFolder.mkdirs();
 
-            FileOutputStream fo = new FileOutputStream(data);
+            File out = new File(dataFolder, fileName);
+
+            FileOutputStream fo = new FileOutputStream(out);
 
             for (Trio element : samples) {
                 fo.write(("\"" + element.getX() + "\", " + "\""
