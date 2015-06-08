@@ -18,15 +18,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import sensor.data.Sample;
 
-import sensor.data.Trio;
-
+//Activity that shows gyroscope, accelerometer, magnetic field, rotation vector and saves the data
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private Sensor gyroscope, accelerometer, magneticField, rotationVector;
-    private SensorManager sm;
-    TextView accValues, gyroValues, magValues, rotValues;
-    ArrayList<Trio> accList = new ArrayList<>(), gyroList = new ArrayList<>(),
+    private Sensor gyroscope, accelerometer, magneticField, rotationVector; //Sensors being used
+    private SensorManager sm; //Sensor Manager
+    TextView accValues, gyroValues, magValues, rotValues; //TextViews that will show sensor values
+    ArrayList<Sample> accList = new ArrayList<>(), gyroList = new ArrayList<>(), //Lists with the sensor data
             magList = new ArrayList<>(), rotList = new ArrayList<>();
 
     @Override
@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Initialize variables
         this.accValues = (TextView)this.findViewById(R.id.accValues);
         this.rotValues = (TextView)this.findViewById(R.id.rotValues);
         this.gyroValues = (TextView)this.findViewById(R.id.gyroValues);
@@ -69,26 +70,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return super.onOptionsItemSelected(item);
     }
 
+    //Displays and saves sensor values when they change
     @Override
     public void onSensorChanged(SensorEvent event) {
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            accList.add(new Trio(event.values[0], event.values[1], event.values[2], event.timestamp));
+            accList.add(new Sample(event.values[0], event.values[1], event.values[2], event.timestamp));
             accValues.setText("X: " + event.values[0] + "\n" + "Y: " + event.values[1] + "\n" + "Z: " + event.values[2]);
         }
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            gyroList.add(new Trio(event.values[0], event.values[1], event.values[2], event.timestamp));
+            gyroList.add(new Sample(event.values[0], event.values[1], event.values[2], event.timestamp));
             gyroValues.setText("X: " + event.values[0] + "\n" + "Y: " + event.values[1] + "\n" + "Z: " + event.values[2]);
         }
 
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            magList.add(new Trio(event.values[0], event.values[1], event.values[2], event.timestamp));
+            magList.add(new Sample(event.values[0], event.values[1], event.values[2], event.timestamp));
             magValues.setText("X: " + event.values[0] + "\n" + "Y: " + event.values[1] + "\n" + "Z: " + event.values[2]);
         }
 
         if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            rotList.add(new Trio(event.values[0], event.values[1], event.values[2], event.timestamp));
+            rotList.add(new Sample(event.values[0], event.values[1], event.values[2], event.timestamp));
             rotValues.setText("X: " + event.values[0] + "\n" + "Y: " + event.values[1] + "\n" + "Z: " + event.values[2]);
         }
     }
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    //Registers sensors when toggle button is on and unregisters them when off
     public void toggleClick(View view) {
         boolean isClicked = ((ToggleButton)view).isChecked();
 
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sm.unregisterListener(this);
     }
 
+    //Saves sensor data in .csv files when save data button is clicked
     public void saveData(View view) {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
@@ -127,7 +131,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         magList.clear();
     }
 
-    public  void writeToFile(String fileName,String time, ArrayList<Trio> samples) {
+    //Writes sensor data to file
+    public  void writeToFile(String fileName, String time, ArrayList<Sample> samples) {
         final String FOLDER_NAME = "Sensor_Data";
 
         try {
@@ -143,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             FileOutputStream fo = new FileOutputStream(out);
 
-            for (Trio element : samples) {
+            for (Sample element : samples) {
                 fo.write(("\"" + element.getX() + "\", " + "\""
                         + element.getY() + "\", " + "\""
                         + element.getZ() + "\", "
