@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor gyroscope, accelerometer, magneticField, rotationVector; //Sensors being used
     private SensorManager sm; //Sensor Manager
     TextView accValues, gyroValues, magValues, rotValues; //TextViews that will show sensor values
+    ToggleButton toggle;
     ArrayList<Sample> accList = new ArrayList<>(), gyroList = new ArrayList<>(), //Lists with the sensor data
             magList = new ArrayList<>(), rotList = new ArrayList<>();
 
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         //Initialize variables
+        this.toggle = (ToggleButton)this.findViewById(R.id.start_stopBtn);
         this.accValues = (TextView)this.findViewById(R.id.accValues);
         this.rotValues = (TextView)this.findViewById(R.id.rotValues);
         this.gyroValues = (TextView)this.findViewById(R.id.gyroValues);
@@ -45,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         this.accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         this.magneticField = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         this.rotationVector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-
     }
 
     @Override
@@ -109,26 +111,50 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sm.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
             sm.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_GAME);
             sm.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
+
+            Toast.makeText(getApplicationContext(), "Sensor Started", Toast.LENGTH_SHORT).show();
         }
-        else
+        else {
             sm.unregisterListener(this);
+            accList.clear();
+            gyroList.clear();
+            magList.clear();
+            rotList.clear();
+
+            accValues.setText("");
+            gyroValues.setText("");
+            magValues.setText("");
+            rotValues.setText("");
+
+            Toast.makeText(getApplicationContext(), "Sensor Stopped", Toast.LENGTH_SHORT).show();
+        }
     }
 
     //Saves sensor data in .csv files when save data button is clicked
     public void saveData(View view) {
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-        Date now = cal.getTime();
 
-        writeToFile("Accelerometer_" + sdf.format(now) + ".csv", sdf.format(now),accList);
-        writeToFile("Gyroscope_" + sdf.format(now) + ".csv", sdf.format(now), gyroList);
-        writeToFile("RotationVector_" + sdf.format(now) + ".csv", sdf.format(now), rotList);
-        writeToFile("MagneticField_" + sdf.format(now) + ".csv", sdf.format(now), magList);
+        if(!accList.isEmpty() || !gyroList.isEmpty() || !rotList.isEmpty() || !magList.isEmpty()) {
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+            Date now = cal.getTime();
 
-        accList.clear();
-        gyroList.clear();
-        rotList.clear();
-        magList.clear();
+            writeToFile("Accelerometer_" + sdf.format(now) + ".csv", sdf.format(now), accList);
+            writeToFile("Gyroscope_" + sdf.format(now) + ".csv", sdf.format(now), gyroList);
+            writeToFile("RotationVector_" + sdf.format(now) + ".csv", sdf.format(now), rotList);
+            writeToFile("MagneticField_" + sdf.format(now) + ".csv", sdf.format(now), magList);
+
+            sm.unregisterListener(this);
+            this.toggle.setChecked(false);
+
+            accList.clear();
+            gyroList.clear();
+            rotList.clear();
+            magList.clear();
+
+            Toast.makeText(getApplicationContext(), "Data has been stored", Toast.LENGTH_SHORT).show();
+        }
+        else
+            Toast.makeText(getApplicationContext(), "No data to be stored", Toast.LENGTH_SHORT).show();
     }
 
     //Writes sensor data to file
