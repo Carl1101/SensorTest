@@ -4,6 +4,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +22,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import sensor.data.Sample;
 
 //Activity that shows gyroscope, accelerometer, magnetic field, rotation vector and saves the data
@@ -30,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     ToggleButton toggle;
     ArrayList<Sample> accList = new ArrayList<>(), gyroList = new ArrayList<>(), //Lists with the sensor data
             magList = new ArrayList<>(), rotList = new ArrayList<>();
+    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5);; //Object to schedule delayTask thread
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,12 +116,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         boolean isClicked = ((ToggleButton)view).isChecked();
 
         if (isClicked) {
-            sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
-            sm.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-            sm.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_GAME);
-            sm.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
-
-            Toast.makeText(getApplicationContext(), "Sensor Started", Toast.LENGTH_SHORT).show();
+            ScheduledFuture<?> delayFuture = scheduledThreadPoolExecutor.schedule(countDown, 6000, TimeUnit.MILLISECONDS);
         }
         else {
             sm.unregisterListener(this);
@@ -175,10 +179,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             FileOutputStream fo = new FileOutputStream(out);
 
             for (Sample element : samples) {
-                fo.write(("\"" + element.getX() + "\", " + "\""
-                        + element.getY() + "\", " + "\""
-                        + element.getZ() + "\", "
-                        + "\"" + element.getTimestamp() + "\"" + "\n").getBytes());
+                fo.write((element.getX() + ","
+                        + element.getY() + ","
+                        + element.getZ() + ","
+                        + element.getTimestamp() + "\n").getBytes());
             }
 
             fo.close();
@@ -186,4 +190,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
     }
+
+
+    Runnable countDown = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                r.play();
+
+                sm.registerListener(MainActivity.this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(MainActivity.this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(MainActivity.this, magneticField, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(MainActivity.this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
+
+                Toast.makeText(getApplicationContext(), "Sensor Started", Toast.LENGTH_SHORT).show();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+    };
 }
